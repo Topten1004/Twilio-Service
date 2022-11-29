@@ -19,7 +19,7 @@ export class AppComponent implements OnInit{
     to: '',
     body: ''
   } ;
-  
+
   constructor(private service :TwilioService) {
   }
 
@@ -33,6 +33,8 @@ export class AppComponent implements OnInit{
       this.sms.to = this.to;
       this.sms.body = this.body;
   
+      console.log(this.from, this.to, this.body);
+
       this.service.sendSMS(this.sms).subscribe(
         (response: any) => {
           console.log(response)
