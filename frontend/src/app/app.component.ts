@@ -14,9 +14,13 @@ export class AppComponent implements OnInit{
   from = '';
   to : string = '';
   body : string = '';
-  sms : SMS | undefined ;
+  sms : SMS = {
+    from : '',
+    to: '',
+    body: ''
+  } ;
+  
   constructor(private service :TwilioService) {
-
   }
 
   ngOnInit() : void{
