@@ -1,0 +1,32 @@
+:host,
+#participant-list {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#participant-list {
+    border: solid 6px rgb(34, 34, 34);
+    background-color: rgb(38, 38, 38);
+}
+
+#alone {
+    height: 100%;
+}
+
+#alone.table {
+    display: table;
+}
+
+div > p {
+    vertical-align: middle;
+    display: table-cell;
+    padding: 0 10%;
+}
+
+.leave-room {
+    background-color: #F22F46;
+}
+
+.navbar.shadow {
+    border-bottom: solid 3px rgb(34, 34, 34) !important;
+}

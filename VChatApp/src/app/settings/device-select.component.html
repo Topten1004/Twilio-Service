@@ -1,0 +1,6 @@
+<label for="{{ id }}" class="h5">{{ label }}</label>
+<select class="custom-select" id="{{ id }}" (change)="onSettingsChanged($event)">
+    <option *ngFor="let device of devices" [value]="device.deviceId" [selected]="device.deviceId === selectedId">
+        {{ device.label }}
+    </option>
+</select>
