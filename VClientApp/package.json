@@ -34,6 +34,7 @@
     "@angular/compiler-cli": "^15.0.0",
     "@angular/language-service": "11.2.4",
     "@types/node": "^12.11.1",
+    "@types/offscreencanvas": "^2019.7.0",
     "codelyzer": "^6.0.0",
     "protractor": "~7.0.0",
     "ts-node": "~7.0.1",

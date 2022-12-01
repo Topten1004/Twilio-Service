@@ -7,10 +7,17 @@ const app = express()
 
 const AccessToken = require("twilio").jwt.AccessToken;
 const VideoGrant = AccessToken.VideoGrant;
+const ChatGrant = AccessToken.ChatGrant;
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioClient = require('twilio')(accountSid, authToken);
+
+// create the twilioClient
+const twilioClient = require("twilio")(
+  process.env.TWILIO_API_KEY_SID,
+  process.env.TWILIO_API_KEY_SECRET,
+  { accountSid: process.env.TWILIO_ACCOUNT_SID }
+);
 
 app.use(bodyParser.urlencoded({ extended: false }))
 
@@ -21,9 +28,28 @@ app.get('/', (request, response) => {
   response.send('Server is working')
 })
 
-
-
 const PORT = 3001
+
+app.get('/token/:identity', (req, res) => {
+  const identity = req.params.identity;
+  const token = new AccessToken(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_API_KEY,
+    process.env.TWILIO_API_SECRET,
+  );
+
+  token.identity = identity;
+  token.addGrant(
+    new ChatGrant({
+      serviceSid: process.env.TWILIO_CHAT_SERVICE_SID,
+    }),
+  );
+
+  res.send({
+    identity: token.identity,
+    jwt: token.toJwt(),
+  });
+});
 
 const findOrCreateRoom = async (roomName) => {
   try {
@@ -62,6 +88,7 @@ const getAccessToken = (roomName) => {
   // serialize the token and return it
   return token.toJwt();
 };
+
 app.post("/api/video/token", async (req, res) => {
   // return 400 if the request has an empty body or no roomName
 
