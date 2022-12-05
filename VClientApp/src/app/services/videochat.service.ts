@@ -10,7 +10,7 @@ interface AuthToken {
 export interface NamedRoom {
     id: string;
     name: string;
-    maxParticipants?: 2;
+    maxParticipants?: number;
     participantCount: number;
 }
 

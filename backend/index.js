@@ -1,5 +1,8 @@
 require('dotenv').config()
+
 const { v4: uuidv4 } = require("uuid");
+
+const PORT = 3001
 
 const express = require('express')
 var bodyParser = require('body-parser')
@@ -13,11 +16,7 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 
 // create the twilioClient
-const twilioClient = require("twilio")(
-  process.env.TWILIO_API_KEY_SID,
-  process.env.TWILIO_API_KEY_SECRET,
-  { accountSid: process.env.TWILIO_ACCOUNT_SID }
-);
+const twilioClient = require("twilio")(accountSid, authToken);
 
 app.use(bodyParser.urlencoded({ extended: false }))
 
@@ -28,7 +27,48 @@ app.get('/', (request, response) => {
   response.send('Server is working')
 })
 
-const PORT = 3001
+
+app.get("/api/conversation/token", function(req, res) {
+  let username = req.query.username;
+
+  let token = new AccessToken(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_API_KEY,
+      process.env.TWILIO_API_SECRET,
+      {
+          identity: username
+      }
+  );
+
+
+  let grant = new ChatGrant({ serviceSid: process.env.TWILIO_CHAT_SERVICE_SID });
+
+  token.addGrant(grant);
+  const tokenJwt = token.toJwt();
+  console.log("token: " + tokenJwt);
+
+  res.send(tokenJwt);
+});
+
+app.post('/api/conversation/create', async (req, res) => {
+  const {name, identity} = req.body;
+  const client = twilio(twilioAccountSid, authToken)
+  const conversation = await client.conversations.conversations
+    .create({ friendlyName: name });
+
+  await client.conversations
+    .conversations(conversation.sid)
+    .participants
+    .create({ identity: identity })
+
+  res.json({ conversation })
+})
+
+app.get("/api/conversation/conversations", async(res, req) => {
+  twilioClient.conversations.v1.conversations
+      .list({limit: 20})
+      .then(conversations => conversations.forEach(c => console.log(c.sid)));
+});
 
 app.get('/token/:identity', (req, res) => {
   const identity = req.params.identity;
@@ -89,7 +129,7 @@ const getAccessToken = (roomName) => {
   return token.toJwt();
 };
 
-app.get("/api/video/rooms",async (req, res) => {
+app.get("/api/video/rooms", async (req, res) => {
   try {
     // Get the last 20 rooms that are still currently in progress.
     const rooms = await twilioClient.video.rooms.list({status: 'in-progress', limit: 20});
@@ -163,11 +203,6 @@ app.post("/api/video/join-room", async (req, res) => {
   });
 });
 
-// Start the Express server
-app.listen(port, () => {
-  console.log(`Express server running on port ${port}`);
-});
-
 app.post("/api/video/token", async (req, res) => {
   // return 400 if the request has an empty body or no roomName
   const roomName = req.body.roomName;
@@ -179,6 +214,7 @@ app.post("/api/video/token", async (req, res) => {
     token: token,
   });
 });
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
