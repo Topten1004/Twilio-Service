@@ -23,23 +23,24 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
+// server is working
 app.get('/', (request, response) => {
   response.send('Server is working')
 })
 
+// generate token
+app.get("/api/conversation/:identity", function(req, res) {
 
-app.get("/api/conversation/token", function(req, res) {
-  let username = req.query.username;
+  let identity = req.query.identity;
 
   let token = new AccessToken(
       process.env.TWILIO_ACCOUNT_SID,
       process.env.TWILIO_API_KEY,
       process.env.TWILIO_API_SECRET,
       {
-          identity: username
+          identity: identity
       }
   );
-
 
   let grant = new ChatGrant({ serviceSid: process.env.TWILIO_CHAT_SERVICE_SID });
 
@@ -50,6 +51,31 @@ app.get("/api/conversation/token", function(req, res) {
   res.send(tokenJwt);
 });
 
+// join conversation
+app.post("/api/conversation/join/", (res, req) => {
+
+  const { sid } = req.body;
+
+  twilioClient.conversations.v1.conversations(sid).join();
+})
+
+// delete conversation
+app.delete("/api/conversation/:sid", (res, req) => {
+
+  let sid = req.query.sid;
+
+  twilioClient.conversations.v1.conversations(sid).remove();
+})
+
+// delete conversation
+app.delete("/api/conversation/:sid", (res, req) => {
+
+    let sid = req.query.sid;
+
+    twilioClient.conversations.v1.conversations(sid).remove();
+})
+
+// create conversation
 app.post('/api/conversation/create', async (req, res) => {
   const {name, identity} = req.body;
   const client = twilio(twilioAccountSid, authToken)
@@ -59,38 +85,37 @@ app.post('/api/conversation/create', async (req, res) => {
   await client.conversations
     .conversations(conversation.sid)
     .participants
-    .create({ identity: identity })
+    .create({ identity: identity})
 
   res.json({ conversation })
 })
 
+// join conversation
+app.post('/api/conversation/join', async (req, res) => {
+  const { sid } = req.body;
+  const client = twilio(twilioAccountSid, authToken)
+
+  const conversation = await client.conversations.v1.conversations(sid)
+  .fetch()
+  .then(conversation => console.log(conversation.friendlyName));
+
+  conversation.joi
+
+  res.json({ conversation })
+})
+
+// fetch all conversations
 app.get("/api/conversation/conversations", async(res, req) => {
-  twilioClient.conversations.v1.conversations
-      .list({limit: 20})
-      .then(conversations => conversations.forEach(c => console.log(c.sid)));
+    const conversations = await client.conversations.v1.conversations()
+    .fetch()
+    .then(conversation => console.log(conversation.friendlyName));
+
+    res.send({
+      data: conversations,
+    });
 });
 
-app.get('/token/:identity', (req, res) => {
-  const identity = req.params.identity;
-  const token = new AccessToken(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_API_KEY,
-    process.env.TWILIO_API_SECRET,
-  );
-
-  token.identity = identity;
-  token.addGrant(
-    new ChatGrant({
-      serviceSid: process.env.TWILIO_CHAT_SERVICE_SID,
-    }),
-  );
-
-  res.send({
-    identity: token.identity,
-    jwt: token.toJwt(),
-  });
-});
-
+// find or create video chat room
 const findOrCreateRoom = async (roomName) => {
   try {
     // see if the room exists already. If it doesn't, this will throw
@@ -110,6 +135,7 @@ const findOrCreateRoom = async (roomName) => {
   }
 };
 
+// get access token for video chat room
 const getAccessToken = (roomName) => {
   // create an access token
   const token = new AccessToken(
@@ -129,6 +155,7 @@ const getAccessToken = (roomName) => {
   return token.toJwt();
 };
 
+// get video rooms
 app.get("/api/video/rooms", async (req, res) => {
   try {
     // Get the last 20 rooms that are still currently in progress.
@@ -165,8 +192,10 @@ app.get("/api/video/rooms", async (req, res) => {
   }
 });
 
-app.post("/api/video/complete", async(req, res) => {
-  const sid = req.body.sid;
+// complete video room
+app.delete("/api/video/complete", async(req, res) => {
+
+  const sid = req.params.sid;
 
   try {
     // Update the status from 'in-progress' to 'completed'.
@@ -188,6 +217,7 @@ app.post("/api/video/complete", async(req, res) => {
   }
 });
 
+// join video room
 app.post("/api/video/join-room", async (req, res) => {
   // return 400 if the request has an empty body or no roomName
   if (!req.body || !req.body.roomName) {
@@ -203,9 +233,10 @@ app.post("/api/video/join-room", async (req, res) => {
   });
 });
 
-app.post("/api/video/token", async (req, res) => {
+// get video room token
+app.post("/api/video/:roomName", async (req, res) => {
   // return 400 if the request has an empty body or no roomName
-  const roomName = req.body.roomName;
+  const roomName = req.params.roomName;
   // find or create a room with the given roomName
   findOrCreateRoom(roomName);
   // generate an Access Token for a participant in this room
