@@ -10,7 +10,7 @@ interface AuthToken {
 export interface NamedRoom {
     id: string;
     name: string;
-    maxParticipants?: number;
+    maxParticipants?: 2;
     participantCount: number;
 }
 
@@ -41,11 +41,16 @@ export class VideoChatService implements OnDestroy {
         return auth.token;
     }
 
+    leaveRoom(sid: string) {
+        return this.http.post('http://localhost:3001/api/video/complete', sid)
+    }
+
     getAllRooms() {
         return this.http
             .get<Rooms>('http://localhost:3001/api/video/rooms')
             .toPromise();
     }
+
 
     async joinOrCreateRoom(name: string, tracks: LocalTrack[]) {
         let room: Room = null;

@@ -22,12 +22,12 @@ export class RoomsComponent implements OnInit, OnDestroy {
         private readonly videoChatService: VideoChatService) { }
 
     async ngOnInit() {
-        // await this.updateRooms();
-        // this.subscription =
-        //     this.videoChatService
-        //         .$roomsUpdated
-        //         .pipe(tap(_ => this.updateRooms()))
-        //         .subscribe();
+        await this.updateRooms();
+         this.subscription =
+             this.videoChatService
+                 .$roomsUpdated
+                 .pipe(tap(_ => this.updateRooms()))
+                 .subscribe();
     }
 
     ngOnDestroy() {
