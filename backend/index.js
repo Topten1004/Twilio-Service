@@ -29,9 +29,10 @@ app.get('/', (request, response) => {
 })
 
 // generate token
-app.get('/api/conversation/:identity', (req, res) => {
+app.post('/api/conversation/', (req, res) => {
 
-  let identity = req.params.identity;
+  let identity = req.body.identity;
+  console.log(identity);
 
   let token = new AccessToken(
       process.env.TWILIO_ACCOUNT_SID,
@@ -46,9 +47,10 @@ app.get('/api/conversation/:identity', (req, res) => {
 
   token.addGrant(grant);
   const tokenJwt = token.toJwt();
-  console.log("token: " + tokenJwt);
 
-  res.send(tokenJwt);
+  res.status(200).send({
+    "token" : tokenJwt
+  });
 });
 
 // create conversation
