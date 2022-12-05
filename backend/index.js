@@ -29,9 +29,9 @@ app.get('/', (request, response) => {
 })
 
 // generate token
-app.get("/api/conversation/:identity", function(req, res) {
+app.get('/api/conversation/:identity', (req, res) => {
 
-  let identity = req.query.identity;
+  let identity = req.params.identity;
 
   let token = new AccessToken(
       process.env.TWILIO_ACCOUNT_SID,
@@ -51,38 +51,14 @@ app.get("/api/conversation/:identity", function(req, res) {
   res.send(tokenJwt);
 });
 
-// join conversation
-app.post("/api/conversation/join/", (res, req) => {
-
-  const { sid } = req.body;
-
-  twilioClient.conversations.v1.conversations(sid).join();
-})
-
-// delete conversation
-app.delete("/api/conversation/:sid", (res, req) => {
-
-  let sid = req.query.sid;
-
-  twilioClient.conversations.v1.conversations(sid).remove();
-})
-
-// delete conversation
-app.delete("/api/conversation/:sid", (res, req) => {
-
-    let sid = req.query.sid;
-
-    twilioClient.conversations.v1.conversations(sid).remove();
-})
-
 // create conversation
 app.post('/api/conversation/create', async (req, res) => {
   const {name, identity} = req.body;
-  const client = twilio(twilioAccountSid, authToken)
-  const conversation = await client.conversations.conversations
+
+  const conversation = await twilioClient.conversations.conversations
     .create({ friendlyName: name });
 
-  await client.conversations
+  await twilioClient.conversations
     .conversations(conversation.sid)
     .participants
     .create({ identity: identity})
@@ -91,22 +67,25 @@ app.post('/api/conversation/create', async (req, res) => {
 })
 
 // join conversation
-app.post('/api/conversation/join', async (req, res) => {
+app.post("/api/conversation/join/", (res, req) => {
+
   const { sid } = req.body;
-  const client = twilio(twilioAccountSid, authToken)
 
-  const conversation = await client.conversations.v1.conversations(sid)
-  .fetch()
-  .then(conversation => console.log(conversation.friendlyName));
+  twilioClient.conversations.v1.conversations(sid).join();
+  res.json("Ok");
+})
 
-  conversation.joi
+// delete conversation
+app.delete("/api/conversation/:sid", (res, req) => {
 
-  res.json({ conversation })
+  let sid = req.params.sid;
+
+  twilioClient.conversations.v1.conversations(sid).remove();
 })
 
 // fetch all conversations
 app.get("/api/conversation/conversations", async(res, req) => {
-    const conversations = await client.conversations.v1.conversations()
+    const conversations = await twilioClient.conversations.v1.conversations()
     .fetch()
     .then(conversation => console.log(conversation.friendlyName));
 
@@ -139,11 +118,13 @@ const findOrCreateRoom = async (roomName) => {
 const getAccessToken = (roomName) => {
   // create an access token
   const token = new AccessToken(
-    accountSid,
-    authToken,
-    // generate a random unique identity for this participant
-    { identity: uuidv4() }
-  );
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_API_KEY,
+    process.env.TWILIO_API_SECRET,
+    {
+        identity: uuidv4()
+    }
+);
   // create a video grant for this specific room
   const videoGrant = new VideoGrant({
     room: roomName,
@@ -233,14 +214,15 @@ app.post("/api/video/join-room", async (req, res) => {
   });
 });
 
-// get video room token
-app.post("/api/video/:roomName", async (req, res) => {
+// create video room token
+app.get("/api/video/:roomName", async (req, res) => {
   // return 400 if the request has an empty body or no roomName
   const roomName = req.params.roomName;
   // find or create a room with the given roomName
   findOrCreateRoom(roomName);
   // generate an Access Token for a participant in this room
   const token = getAccessToken(roomName);
+  
   res.send({
     token: token,
   });
