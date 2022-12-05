@@ -57,10 +57,10 @@ export class HomeComponent implements OnInit {
             this.activeRoom.disconnect();
             this.activeRoom = null;
         }
-
+        
         const videoDevice = this.settings.hidePreviewCamera();
         await this.camera.initializePreview(videoDevice && videoDevice.deviceId);
-
+        await this.videoChatService.leaveRoom(this.activeRoom.sid);
         this.participants.clear();
     }
 
