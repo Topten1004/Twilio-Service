@@ -77,6 +77,13 @@ app.post("/api/conversation/join/", (res, req) => {
   res.json("Ok");
 })
 
+app.get("/api/conversation/messages/", async(res, req) => {
+  let messagesPaginator = await conversation.getMessages(30, 0, "backwards");
+  // get messages
+  const messages = messagesPaginator.items;
+  res.json({messages});
+})
+
 // delete conversation
 app.delete("/api/conversation/:sid", (res, req) => {
 
@@ -87,6 +94,8 @@ app.delete("/api/conversation/:sid", (res, req) => {
 
 // fetch all conversations
 app.get("/api/conversation/conversations", async(res, req) => {
+
+  console.log("aaaaa");
     const conversations = await twilioClient.conversations.v1.conversations()
     .fetch()
     .then(conversation => console.log(conversation.friendlyName));
