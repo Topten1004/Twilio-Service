@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 // server is working
-app.get('/', (request, response) => {
+app.get('/', (req, res) => {
   response.send('Server is working')
 })
 
@@ -69,7 +69,7 @@ app.post('/api/conversation/create', async (req, res) => {
 })
 
 // join conversation
-app.post("/api/conversation/join/", (res, req) => {
+app.post("/api/conversation/join/", (req, res) => {
 
   const { sid } = req.body;
 
@@ -77,7 +77,10 @@ app.post("/api/conversation/join/", (res, req) => {
   res.json("Ok");
 })
 
-app.get("/api/conversation/messages/", async(res, req) => {
+app.get("/api/conversation/messages/:sid", async(req, res) => {
+
+  let sid = req.params.sid;
+  let conversation = 
   let messagesPaginator = await conversation.getMessages(30, 0, "backwards");
   // get messages
   const messages = messagesPaginator.items;
@@ -85,7 +88,7 @@ app.get("/api/conversation/messages/", async(res, req) => {
 })
 
 // delete conversation
-app.delete("/api/conversation/:sid", (res, req) => {
+app.delete("/api/conversation/:sid", (req, res) => {
 
   let sid = req.params.sid;
 
@@ -93,16 +96,12 @@ app.delete("/api/conversation/:sid", (res, req) => {
 })
 
 // fetch all conversations
-app.get("/api/conversation/conversations", async(res, req) => {
+app.get("/api/conversation/conversations", async(req, res) => {
 
-  console.log("aaaaa");
-    const conversations = await twilioClient.conversations.v1.conversations()
-    .fetch()
-    .then(conversation => console.log(conversation.friendlyName));
+  let data = await twilioClient.conversations.v1.conversations
+      .list({limit: 20});
 
-    res.send({
-      data: conversations,
-    });
+  return res.json({ data });
 });
 
 // find or create video chat room
