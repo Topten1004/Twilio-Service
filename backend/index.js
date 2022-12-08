@@ -77,10 +77,12 @@ app.post("/api/conversation/join/", (req, res) => {
   res.json("Ok");
 })
 
+// get conversation message
 app.get("/api/conversation/messages/:sid", async(req, res) => {
 
   let sid = req.params.sid;
-  let conversation = 
+  let conversation = await twilioClient.conversations.v1.conversations(sid);
+
   let messagesPaginator = await conversation.getMessages(30, 0, "backwards");
   // get messages
   const messages = messagesPaginator.items;
